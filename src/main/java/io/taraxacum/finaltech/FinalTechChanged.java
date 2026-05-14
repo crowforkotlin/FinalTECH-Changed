@@ -24,6 +24,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -452,22 +453,16 @@ public class FinalTechChanged extends JavaPlugin implements SlimefunAddon {
         if (this.bukkitTask != null) {
             this.bukkitTask.cancel();
         }
-        BlockStorage.saveChunks();
+        flushBlockStorage();
         try {
             FinalTechChanged.logger().info("Waiting all task to end.(" + FinalTechChanged.getLocationRunnableFactory().taskSize() + ")");
             FinalTechChanged.getLocationRunnableFactory().waitAllTask();
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         } finally {
-            BlockStorage.saveChunks();
+            flushBlockStorage();
             try {
-                for (World world : Bukkit.getWorlds()) {
-                    BlockStorage storage = BlockStorage.getStorage(world);
-                    if (storage != null) {
-                        storage.save();
-                    }
-                }
-                BlockStorage.saveChunks();
+                saveAllBlockStorage();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -477,18 +472,32 @@ public class FinalTechChanged extends JavaPlugin implements SlimefunAddon {
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         } finally {
-            BlockStorage.saveChunks();
+            flushBlockStorage();
             try {
-                for (World world : Bukkit.getWorlds()) {
-                    BlockStorage storage = BlockStorage.getStorage(world);
-                    if (storage != null) {
-                        storage.save();
-                    }
-                }
-                BlockStorage.saveChunks();
+                saveAllBlockStorage();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private static void saveAllBlockStorage() {
+        for (World world : Bukkit.getWorlds()) {
+            BlockStorage storage = BlockStorage.getStorage(world);
+            if (storage != null) {
+                storage.save();
+            }
+        }
+        flushBlockStorage();
+    }
+
+    private static void flushBlockStorage() {
+        try {
+            BlockStorage.class.getMethod("saveChunks").invoke(null);
+        } catch (NoSuchMethodException ignored) {
+            // Newer Slimefun versions removed saveChunks(); per-world saves still persist data.
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
         }
     }
 
