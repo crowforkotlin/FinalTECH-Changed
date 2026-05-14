@@ -15,11 +15,15 @@ import java.util.Objects;
 public class EnergyUtil {
     @Nonnull
     public static String getCharge(@Nonnull Location location) {
-        SlimefunItem it = SlimefunItem.getById(BlockStorage.getLocationInfo(location, "id"));
+        Config config = BlockStorage.getLocationInfo(location);
+        if (config == null) {
+            return "0";
+        }
+        SlimefunItem it = SlimefunItem.getById(config.getString(ConstantTableUtil.CONFIG_ID));
         if (it != null)
             if (it instanceof EnergyNetComponent)
                 return String.valueOf(((EnergyNetComponent) it).getCharge(location));
-        return "0";
+        return getCharge(config);
     }
 
     @Nonnull
@@ -28,17 +32,33 @@ public class EnergyUtil {
     }
 
     public static void setCharge(@Nonnull Location location, @Nonnull String energy) {
-        SlimefunItem it = SlimefunItem.getById(BlockStorage.getLocationInfo(location, "id"));
+        Config config = BlockStorage.getLocationInfo(location);
+        if (config == null) {
+            return;
+        }
+        SlimefunItem it = SlimefunItem.getById(config.getString(ConstantTableUtil.CONFIG_ID));
         if (it != null)
             if (it instanceof EnergyNetComponent)
                 ((EnergyNetComponent) it).setCharge(location, Integer.parseInt(energy));
+            else
+                setCharge(config, energy);
+        else
+            setCharge(config, energy);
     }
 
     public static void setCharge(@Nonnull Location location, int energy) {
-        SlimefunItem it = SlimefunItem.getById(BlockStorage.getLocationInfo(location, "id"));
+        Config config = BlockStorage.getLocationInfo(location);
+        if (config == null) {
+            return;
+        }
+        SlimefunItem it = SlimefunItem.getById(config.getString(ConstantTableUtil.CONFIG_ID));
         if (it != null)
             if (it instanceof EnergyNetComponent)
                 ((EnergyNetComponent) it).setCharge(location, energy);
+            else
+                setCharge(config, energy);
+        else
+            setCharge(config, energy);
     }
 
     public static void setCharge(@Nonnull Config config, @Nonnull String energy) {

@@ -9,7 +9,7 @@ main: io.taraxacum.finaltech.FinalTechChanged
 
 version: ${project.version}
 
-api-version: 1.17
+api-version: 1.21
 
 depend:
   - Slimefun

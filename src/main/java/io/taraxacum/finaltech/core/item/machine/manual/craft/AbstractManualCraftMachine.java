@@ -13,7 +13,7 @@ import io.taraxacum.finaltech.core.item.machine.manual.AbstractManualMachine;
 import io.taraxacum.finaltech.core.menu.manual.AbstractManualMachineMenu;
 import io.taraxacum.finaltech.core.menu.manual.ManualCraftMachineMenu;
 import io.taraxacum.finaltech.util.ConfigUtil;
-import io.taraxacum.libs.slimefun.dto.MachineRecipeFactory;
+import io.taraxacum.libs.slimefun.util.EnergyUtil;
 import me.mrCookieSlime.CSCoreLibPlugin.Configuration.Config;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
 import me.mrCookieSlime.Slimefun.api.inventory.BlockMenu;
@@ -26,7 +26,6 @@ import org.bukkit.inventory.ItemStack;
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author Final_ROOT
@@ -55,7 +54,9 @@ public abstract class AbstractManualCraftMachine extends AbstractManualMachine i
             @Override
             public void onPlayerPlace(@Nonnull BlockPlaceEvent blockPlaceEvent) {
                 // TODO remove this
-                BlockStorage.addBlockInfo(blockPlaceEvent.getBlock().getLocation(), ManualCraftMachineMenu.KEY, "0");
+                Location location = blockPlaceEvent.getBlock().getLocation();
+                BlockStorage.addBlockInfo(location, ManualCraftMachineMenu.KEY, "0");
+                AbstractManualCraftMachine.this.setCharge(location, 0);
             }
         };
     }
@@ -70,18 +71,17 @@ public abstract class AbstractManualCraftMachine extends AbstractManualMachine i
     @Override
     protected void tick(@Nonnull Block block, @Nonnull SlimefunItem slimefunItem, @Nonnull Config config) {
         Location location = block.getLocation();
-        int charge = ((EnergyNetComponent) Objects.requireNonNull(SlimefunItem.getById(BlockStorage.getLocationInfo(location, "id")))).getCharge(location);
+        int charge = this.getCharge(location);
 
         int intCharge = charge + this.charge;
         if (intCharge > this.capacity / 2) {
             intCharge /= 2;
         }
 
-        ((EnergyNetComponent) Objects.requireNonNull(SlimefunItem.getById(BlockStorage.getLocationInfo(location, "id")))).setCharge(block.getLocation(), Math.min(intCharge, this.capacity));
+        this.setCharge(location, Math.min(intCharge, this.capacity));
 
         BlockMenu blockMenu = BlockStorage.getInventory(block);
         Inventory inv = blockMenu.toInventory();
-        Location location1 = block.getLocation();
         ManualCraftMachineMenu menu = (ManualCraftMachineMenu) this.getMachineMenu();
 
         if (blockMenu.hasViewer()) {
@@ -109,6 +109,16 @@ public abstract class AbstractManualCraftMachine extends AbstractManualMachine i
     @Override
     public int getCapacity() {
         return capacity;
+    }
+
+    @Override
+    public int getCharge(@Nonnull Location location) {
+        return Integer.parseInt(EnergyUtil.getCharge(BlockStorage.getLocationInfo(location)));
+    }
+
+    @Override
+    public void setCharge(@Nonnull Location location, int charge) {
+        EnergyUtil.setCharge(BlockStorage.getLocationInfo(location), Math.max(0, Math.min(charge, this.capacity)));
     }
 
     public Map<Location, Integer> getLocationCountMap() {

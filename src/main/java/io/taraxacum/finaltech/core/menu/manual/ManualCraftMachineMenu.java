@@ -13,7 +13,6 @@ import io.taraxacum.libs.slimefun.dto.MachineRecipeFactory;
 import io.taraxacum.finaltech.core.item.machine.manual.craft.AbstractManualCraftMachine;
 import io.taraxacum.finaltech.util.ConstantTableUtil;
 import io.taraxacum.finaltech.util.MachineUtil;
-import io.taraxacum.libs.slimefun.util.EnergyUtil;
 import me.mrCookieSlime.CSCoreLibPlugin.Configuration.Config;
 import me.mrCookieSlime.CSCoreLibPlugin.general.Inventory.ClickAction;
 import me.mrCookieSlime.Slimefun.api.BlockStorage;
@@ -252,9 +251,8 @@ public class ManualCraftMachineMenu extends AbstractManualMachineMenu {
 
     @Override
     public void updateInventory(@Nonnull Inventory inventory, @Nonnull Location location) {
-        Config config = BlockStorage.getLocationInfo(location);
-        String charge = EnergyUtil.getCharge(location);
-        int intCharge = Integer.parseInt(charge);
+        int intCharge = this.manualCraftMachine.getCharge(location);
+        String charge = String.valueOf(intCharge);
         AdvancedCraft craft = null;
         String order = get(location, KEY_ORDER);
         int offset = get(location, KEY) != null ? Integer.parseInt(get(location, KEY)) : 0;
@@ -333,7 +331,7 @@ public class ManualCraftMachineMenu extends AbstractManualMachineMenu {
     public void doFunction(@Nonnull BlockMenu blockMenu, @Nonnull ClickAction clickAction, @Nonnull Player player, int offset) {
         Inventory inventory = blockMenu.toInventory();
         Location location = blockMenu.getLocation();
-        int charge = Integer.parseInt(EnergyUtil.getCharge(location));
+        int charge = this.manualCraftMachine.getCharge(location);
         if(charge == 0) {
             return;
         }
@@ -399,7 +397,7 @@ public class ManualCraftMachineMenu extends AbstractManualMachineMenu {
             blockMenu.pushItem(item, OUTPUT_SLOT);
         }
 
-        EnergyUtil.setCharge(location, String.valueOf(charge - craft.getMatchCount() * this.manualCraftMachine.getConsume()));
+        this.manualCraftMachine.setCharge(location, charge - craft.getMatchCount() * this.manualCraftMachine.getConsume());
 
         this.updateInventory(inventory, blockMenu.getLocation());
     }
